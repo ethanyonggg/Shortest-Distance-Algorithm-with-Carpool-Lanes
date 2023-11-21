@@ -1,1 +1,466 @@
+class MinHeap():
+    def __init__(self, length):
+        """
+        Constructor for MinHeap
+        """
+        # length of the memo list that keeps track of the position of the items in the min heap
+        self.memo_length = length
+        # the array of the min heap
+        self.array = [None]
+        # the length of the min heap
+        self.length = 0
+        # initialising the memo list of the min heap
+        self.position_memo = [None] * ((self.memo_length + 1) * 2)
 
+    def insert(self, element):
+        """
+        Add an element to MinHeap's array
+        Time Complexity: O(log V), where V is the number of elements in the MinHeap
+        """
+        # appends the tuple into the array of the min heap
+        self.array.append(element)
+        # increases the length of the minheap by 1
+        self.length += 1
+        # initialises the position of the tuple in the memo list
+        if self.position_memo[element[0]] is not None and element[1] >= self.position_memo[element[0]]:
+            self.position_memo[element[0]+5] = self.length+1
+        else:
+            self.position_memo[element[0]] = self.length - 1
+        # rises the element in the heap if needed
+        self.rise(self.length)
+
+    def serve(self):
+        """
+        Removes and returns the smallest number in the MinHeap's array
+        Time Complexity: O(log V), where V is the number of elements in the MinHeap
+        """
+        # swaps the first element with the last element in the array of the min heap
+        self.swap(1, self.length)
+        # swaps the position of the index in the memo list
+        self.swap_memo(self.array[1][0], self.array[self.length][0])
+        # decreases the length of the min heap by 1
+        self.length -= 1
+        # arranges the elements of the min heap accordingly
+        self.sink(1)
+        # removes the minimum distance tuple of the mim heap and returns it
+        return self.array.pop()
+
+    def swap(self, x, y):
+        """
+        Swap two number's position in the minheap array
+        Time Complexity: O(1)
+        """
+        # swaps elements in the array list of the min heap according to their index
+        self.array[x], self.array[y] = self.array[y], self.array[x]
+
+    def swap_memo(self, x, y):
+        # swaps elements in the memo list of the min heap according to their index
+        self.position_memo[x], self.position_memo[y] = self.position_memo[y], self.position_memo[x]
+
+    def rise(self, element):
+        """
+        Adjusts the position of the element accordingly
+        Time Complexity: O(log V), where V is the number of elements in the MinHeap
+        """
+        # find the index of the parent element of the current element
+        parent = element // 2
+        while parent >= 1:
+            # if the parent element's distance is more than the current element's distance swap
+            if self.array[parent][1] > self.array[element][1]:
+                self.swap(parent, element)
+                self.swap_memo(parent, element)
+                # continues until the top of the min heap is reached
+                element = parent
+                parent = element // 2
+            # parent element's distance is not more than the current element's distance, so break sunce no swapping
+            # is needed
+            else:
+                break
+
+    def sink(self, element):
+        """
+        Adjusts the position of the element accordingly
+        Time Complexity: O(log V), where V is the number of elements in the MinHeap
+        """
+        # finds the index of the child basesd on the index of the element
+        child = 2 * element
+        while child <= self.length:
+            # if the child element is not the last element and if it is lesser than the child element's distance
+            # the move onto the next child
+            if child < self.length and self.array[child + 1][1] < self.array[child][1]:
+                child += 1
+            # if current element's distance is more than child element's distance swap
+            if self.array[element][1] > self.array[child][1]:
+                self.swap(element, child)
+                self.swap_memo(element, child)
+                element = child
+                child = 2 * element
+            # else no swapping is needed so break
+            else:
+                break
+
+    def is_empty(self):
+        """
+        Function description:
+        Checks if the min heap is empty
+        :return: boolean value to check if the min heap is empty
+        """
+        if len(self.array) == 0:
+            return True
+        else:
+            return False
+
+    # def update_distance(self, vertex, distance):
+    #     """
+    #     Function descriptionL
+    #     Updates the distance of the elements in the min heap using the index retreived from the min heap's memo list
+    #     and rises the element if needed
+    #     :param vertex:
+    #     :param distance:
+    #     :return:
+    #     """
+    #     self.array[self.position_memo[vertex]][1] = distance
+    #     self.rise(self.position_memo[vertex])
+
+class Graph:
+    """
+    Graph class that stores and initialises all the vertices needed
+    """
+    def __init__(self, V, carpool_map):
+        """
+        Function description:
+        innit method for the graph class that stores all the vertices of the graph
+        :param V: the list of paths containing the vertices and the edges
+        :param exit_map: wether the graph is the first graph without ecits or the second graph with exits
+        """
+        # length of the graph
+        self.length = 0
+        # since every vertex has to have at least one incoming edge
+        # we can determine the length of the array of the graph
+        for i in V:
+            if i[1] > self.length:
+                self.length = i[1]
+        # initialises the vertice list of the graph
+        self.vertices = [None] * (self.length + 1)
+        # initialises vertex instances and inserts it according to their respective index
+        for i in V:
+            self.vertices[i[0]] = Vertex(i[0])
+            self.vertices[i[0]].carpool_map = carpool_map
+            self.vertices[i[1]] = Vertex(i[1])
+            self.vertices[i[1]].carpool_map = carpool_map
+
+    def add_carpool_edges(self, passengers):
+        """
+        adds the carpool edges into the respective vertices for the exit_map O(passengers) time complexity
+        :param exit_vertex: list of vertices that has exits
+        """
+        for passenger in passengers:
+            current_vertex = self.vertices[passenger]
+
+            u = passenger
+            v = passenger
+            w = 0
+
+            current_edge = Edge(u, v, w)
+            current_vertex.add_edge(current_edge)
+            current_vertex.passenger = True
+
+    def add_edges(self, argv_edges):
+        """
+        add the edges into the respective vertices for the map O(E) time complexity
+        :param argv_edges:
+        :return:
+        """
+        for edge in argv_edges:
+            u = edge[0]
+            v = edge[1]
+            w = edge[2]
+
+            current_edge = Edge(u, v, w)
+            current_vertex = self.vertices[u]
+            if current_vertex.carpool_map == True:
+                current_edge = Edge(u,v, edge[3])
+
+            current_vertex.add_edge(current_edge)
+
+    # def add_key_edges(self, key_vertex):
+    #     """
+    #     adds the key edges into the respective vertices for the exit_map O(keys) time complexity
+    #     :param key_vertex: list of vertices that has keys in it
+    #     """
+    #     for keys in key_vertex:
+    #         # self.keys[keys[0]] = keys
+    #         current_vertex = self.vertices[keys[0]]
+
+    #         u = keys[0]
+    #         v = keys[0]
+    #         w = keys[1]
+
+    #         current_edge = Edge(v, v, w)
+    #         current_vertex.add_edge(current_edge)
+
+    # def add_key_indicator(self, key_vertex):
+    #     """
+    #     Changes the self.key value in the vertex to True for the exit map O(keys) time coomplexity
+    #     :param key_vertex: list of vertices that has keys
+    #     """
+    #     for keys in key_vertex:
+    #         # Vertex in the second map contains a key and is used to reach here
+    #         self.vertices[keys[0]].key = True
+
+    # # def add_exit_edges(self, argv_edges, exit_vertex):
+    # #     for exits in exit_vertex:
+    # #         self.e
+
+    def __str__(self):
+        """
+        to String method of the graph that prints each and every vertex stored inside th graph
+        :return:
+        """
+        return_string = ""
+        for vertex in self.vertices:
+            return_string = return_string + "Vertex " + str(vertex) + "\n"
+        return return_string
+
+
+class Vertex:
+    """
+    Vertex class storing all variables/information needed for each vertex
+    """
+    def __init__(self, id):
+        """
+        innit method for the vertex class that initalises all information needed for each vertex instance
+        :param id: the id of the vertex
+        """
+        # unique id of the vertex
+        self.id = id
+        # list of outgoing edges from the vertex
+        self.edges = []
+        self.discovered = False
+        self.visited = False
+        # current distance of the vertex from the source
+        self.distance = 0
+        # backtracking
+        self.previous = None
+        # key vertex
+        self.passenger = False
+        # exit vertex
+        # self.exit = False
+        # carpool map
+        self.carpool_map = False
+        # if the vertex has been traverse before
+        self.traverse = False
+
+    def add_edge(self, edge):
+        """
+        Adds the edge isnstance in the edges list of the vertex
+        :param edge: Edge class instance
+        """
+        self.edges.append(edge)
+
+    def __str__(self):
+        """
+        to String method of the Vertex class that prints the vertex id and all the edges that is outgoing from the vertex
+        :return:
+        """
+        return_string = "ID: " + str(self.id)
+        for edges in self.edges:
+            return_string += "\n" + str(edges)
+        return return_string
+
+
+class Edge:
+    """
+    Edge class that stores the current vertex, the destination vertex and the weight of the outgoing path
+    """
+    def __init__(self, u, v, w):
+        """
+        Initialises the edge instance
+        :param u: the id of the current vertex
+        :param v: the id of the destination vertex
+        :param w: the weight of the outgoing path
+        """
+        self.u = u
+        self.v = v
+        self.w = w
+
+    def __str__(self):
+        """
+        to String method the the Edge class that prints out the id of the destination vertex along with the weight of
+        the path
+        :return: return string
+        """
+        return_string = str(self.v) + " with a distance of " + str(self.w)
+        return return_string
+
+
+class optimalRoute:
+    def __init__(self, roads, passengers):
+        """
+        Function description: innit function of the FloorGraph class that initalises all the graphs needed
+        Approach description:
+        Creates two maps represented by graphs that stores all the vertices along with the paths. The first map
+        represented by new_map represents the graph containing all vertices and edges and then adding edges that
+        has keys in the respective vertices that when at that vertex can decide to fight the bosses there to obtain it,
+        the time taken to fight those bosses represents the weight of the edge and the destination vertex is
+        to itself. The second map represented by exit_map is created for if when the player has fought the boss and
+        obtained the key then only they would be able to traverse to the second map that has exits.
+        :param paths: A list of tuples containing infrmation of the current vertex id, the destination vertex id and
+        the weight of the paths
+        :param keys: A list of vertices containing keys
+
+        time complexity: O(|V| + |E|), V reprsenting the number of vertices and E representing the number of edges
+        space complexity: O(|V| + |E|), V reprsenting the number of vertices and E representing the number of edges
+        """
+        # creates the new map , O(|V| + |E|)
+        self.new_map = Graph(roads, carpool_map=False)
+        # adds the respective edges to all the vertices in the new map ,O(|E|)
+        self.new_map.add_edges(roads)
+        # adds the carpool edges to the new map, O(|P|)
+        self.new_map.add_carpool_edges(passengers)
+        # adds the respective edges to all the vertices in the exit map, O(|V| + |E|)
+        self.carpool_map = Graph(roads, carpool_map=True)
+        self.carpool_map.add_edges(roads)
+        # adds the key indicator for the respective vertices in the exit map,O(|K|)
+        # self.new_map.add_key_indicator(passengers)
+        # retrieves the length of the min heap
+        self.discovered = MinHeap(self.new_map.length)
+
+    def djikstra(self, start, destination):
+        """
+        Function description:
+        Function for djikstra through BFS, that serves and inserts tuples (vertex.id, vertex.distance) into the min heap
+        based on the least distance element that can be found in the min heap. All edges of the served min heap which
+        is obtained from the respective graph is inserted into the min heap and is then arranged accordingly.
+
+        Approach descriptionL
+        This function uses concepts of djikstra that checks all outgoing edges distance of all discovered vertices and
+        and adds those edges into the min heap t determine the next served vertice. This function operates until all
+        vertices in the graph is has been served or when the exit vertice in the exit map is reached. When the vertex
+        that has a key has been served by traversing the edge needed to fight the boss and get the key. The current map then
+        changes to the exit map where the player can now find the shortes distance to the nearest vertice that has
+        an outgoing edge of weight 0 to itself which signifies the exit. Once this vertex is served the while loop breaks
+        and the output is printed.
+
+        :param start: the id of the start vertex
+        :param exits: the id of the exit vertex
+        :return: the output list of the traversed vertices to reach the exit vertex in the exit map
+
+        time complexity: O(|E| log |V|) for djikstra
+        auxiliary space complexity: O(|V|+|E|) for the min heap and the graph
+        """
+        # output list to be returned
+        output_list = []
+        # the chosen exit vertex id
+        exit_chosen = None
+
+        # current map is initially started at the new map since no passengers have been picked up
+        current_map = self.new_map.vertices
+
+        # the distance of the starting vertex
+        value = current_map[start].distance
+        # inserts the tuple into the min heap (key, value)
+        self.discovered.insert((start, value))
+        # while min heap is not empty keep running djikstra, O(|E| + |V|)
+        while not self.discovered.is_empty():
+            # serve from the vertex, O(log(V))
+            u = self.discovered.serve()
+            u = current_map[u[0]]
+            # if the previous vertex is not none
+            if u.previous is not None:
+                # # if the previous vertex has been visited and has a passenger means the driver has picked up the passenger
+                # if current_map[u.previous].visited == True and current_map[u.previous].passenger == True:
+                #     # if the served vertex is the same as the previous vertex means the player is fighting the boss
+                #     if v.id == u.id:
+                #         # traverse is set to true indicating the driver has the option to use carpool lanes
+                #         current_map[u.previous].traverse = True
+
+                # if traverse is true means the driver has picked up a passenger
+                if current_map[u.id].traverse == True:
+                    # map is changed to carpool map since driver has a passenger
+                    current_map = self.carpool_map.vertices
+                    # vertice is not the vertex of the exit map
+                    u = current_map[u.id]
+
+            # if the exit vertex is served the driver has reached it's destination thus djikstra stops running
+            if u.id == destination:
+                break
+
+            # served vertex has been visited
+            u.visited = True
+            # perform edge relaxation on all adjacent vertices
+            for edge in u.edges:
+                v = current_map[edge.v]
+                # if the destination vertex id is same as the current vertex id means the driver is traversing to the carpool map
+                # thus the vertex map has changed
+                if v.id == u.id:
+                    u.traverse = True
+                    v = self.carpool_map.vertices[v.id]
+
+                # if the vertex has not been discvered add their edges into the min heap in the form of a tuple
+                if v.discovered == False:
+                    v.discovered = True
+                    # updates the distance in the graph
+                    v.distance = u.distance + edge.w
+                    # updates the previous vertex
+                    v.previous = u.id
+                    # inserts the tuple into the min heap
+                    self.discovered.insert((v.id, v.distance))  # means i have discovered v, adding it to queue
+                # it is in heap but not yet finalize
+                elif v.visited == False:
+                    # if i find a shorter path, change it
+                    if v.distance > u.distance + edge.w:
+                        # update distance
+                        v.distance = u.distance + edge.w
+                        v.previous = u.id
+                        # update the Heap
+                        # perform upheap
+                        # self.discovered.update_distance(v.id, v.distance)
+
+        passenger_list = []
+        # since exits are always on the exit map the output map is set to the exit map
+        current_map = self.carpool_map.vertices
+        # exit chosen represents the vertex id in the exit map
+        current_vertex = current_map[destination]
+        # the total distance traversed from start to exit
+        destination_distance = current_vertex.distance
+        # inserts the previous vertex into the output list
+        output_list.insert(0, current_vertex.id)
+        while current_vertex != None:
+            if self.new_map.vertices[current_vertex.id].passenger == True:
+                passenger_list.append(current_vertex.id)
+
+            # if the previous vertex is not none and is on a key vertex means the [layer has previously fought the boss
+            # at this vertex in order to obtain the key thus the map is changed
+            if self.new_map.vertices[current_vertex.previous].passenger == True and current_vertex.id == current_vertex.previous:
+                # changes the map
+                current_map = self.new_map.vertices
+                # obtains the previous of the same vertex but in the new map
+                current_vertex = self.new_map.vertices[current_vertex.previous]
+                # inserts this vertex id into the output list
+                output_list.insert(0, current_vertex.previous)
+            else:
+                # if the previous is none and the map is the new map means it has reached the source vertex thus exits
+                # out of the loop
+                if current_map == self.new_map.vertices and current_vertex.id == start:
+                    break
+                # else means it is still has the exit map and inserts the previous vertex id into the output list
+                output_list.insert(0, current_vertex.previous)
+
+            # previous vertex is set to the current vertex and the previous is traversed again
+            current_vertex = current_map[current_vertex.previous]
+
+        # returns the tuple (total distance, output list)
+        return "Route Taken: " + str(output_list), "Time taken: " + str(destination_distance) + " minutes", "with passengers: " + str(passenger_list)
+
+if __name__ == "__main__":
+    # Example
+    start = 0
+    end = 4
+    # The locations where there are potential passengers
+    passengers = [2, 1]
+    # The roads represented as a list of tuple
+    roads = [(0, 3, 5, 3), (3, 4, 35, 15), (3, 2, 2, 2), (4, 0, 15, 10),
+    (2, 4, 30, 25), (2, 0, 2, 2), (0, 1, 10, 10), (1, 4, 30, 20)]
+    test = optimalRoute(roads,passengers)
+    print(test.djikstra(start,end))
